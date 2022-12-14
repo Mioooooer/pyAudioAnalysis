@@ -510,7 +510,7 @@ def speed_feature(signal, sampling_rate, window, step):
     #            spectral_feats+n_mfcc_feats+1]
     return np.array(st_features)
 
-
+'''
 def phormants(x, sampling_rate):
     N = len(x)
     w = np.hamming(N)
@@ -535,7 +535,7 @@ def phormants(x, sampling_rate):
     frqs = sorted(angz * (sampling_rate / (2 * math.pi)))
 
     return frqs
-
+'''
 
 """ Windowing and feature extraction """
 

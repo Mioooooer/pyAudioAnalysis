@@ -2,8 +2,8 @@ from __future__ import print_function
 from imblearn.under_sampling import RandomUnderSampler
 from imblearn.over_sampling import SMOTE
 from sklearn.model_selection import GroupShuffleSplit
-from pyAudioAnalysis import audioBasicIO
-from pyAudioAnalysis import MidTermFeatures as aF
+import audioBasicIO
+import MidTermFeatures as aF
 import sys
 import numpy as np
 import os

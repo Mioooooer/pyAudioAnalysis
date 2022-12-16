@@ -1,6 +1,7 @@
 import audioTrainTest as aT
 import sys
 from PySide6.QtWidgets import QWidget, QApplication, QLineEdit, QMainWindow, QTextBrowser, QPushButton, QMenu
+import os
 import configparser
 
 class Window(QMainWindow):
@@ -12,11 +13,21 @@ class Window(QMainWindow):
         self.textBrowser = QTextBrowser()
         self.setCentralWidget(self.textBrowser)  # ==> 定义窗口主题内容为textBrowser
         self.setAcceptDrops(True)  # ==> 设置窗口支持拖动（必须设置）
-        self.Modelfile = ''
         self.config=configparser.ConfigParser()
-        self.cfgpath='./SearchingCFG.ini'
+        self.cfgpath=os.path.join(os.path.dirname(os.path.abspath(__file__)),'SearchingCFG.ini')
         self.config.read(self.cfgpath)
-        self.Modelname = self.config.get('path','src')
+        self.ModelName = 'svm'
+        self.ModelFile = 'svmModel'
+        self.Modelnum = int(self.config.get('Model','num'))
+        self.ModelNameList = []
+        self.ModelFileList = []
+        self.curModelIndex = 0
+        self.displayNum = int(self.config.get('Model','DisplayNum'))
+        for i in range(int(self.Modelnum)):
+            self.ModelNameList.append(self.config.get('Model','ModelName'+str(i)))
+            self.ModelFileList.append(self.config.get('Model','ModelFile'+str(i)))
+        self.textBrowser.setText('using model file: '+self.ModelFile+'\n'+'show first '+str(self.displayNum)+' results.\n'+'press to change model and num of results')
+        self.initUI()
 
     # 鼠标拖入事件
     def dragEnterEvent(self, event):
@@ -35,11 +46,10 @@ class Window(QMainWindow):
         #self.textBrowser.setText(self.text)
         if file.endswith('.wav'):
             self.text = ''
-            class_id, probability, classes = aT.file_classification(file, "svmSMtemp","svm")
-            top_n=3
-            top_n_idx=probability.argsort()[::-1][0:top_n]
+            class_id, probability, classes = aT.file_classification(file, self.ModelFile,self.ModelName)
+            top_n_idx=probability.argsort()[::-1][0:self.displayNum]
             for i in top_n_idx:
-                self.text += classes[i] + "\n"
+                self.text += classes[i][2:] + "\n"
         else:
             self.text = 'drag in wav file please!!!'
         self.textBrowser.setText(self.text)
@@ -47,22 +57,40 @@ class Window(QMainWindow):
     def initUI(self):
         CModelBtn = QPushButton('Change Model', self)
         CModelBtn.setCheckable(True)
-        CModelBtn.move(10, 10)
-        
+        CModelBtn.move(10, 350)
+        PlusBtn = QPushButton('+', self)
+        PlusBtn.setCheckable(True)
+        PlusBtn.move(110, 350)
+        MinusBtn = QPushButton('-', self)
+        MinusBtn.setCheckable(True)
+        MinusBtn.move(210, 350)
         CModelBtn.clicked[bool].connect(self.changeModel)
+        PlusBtn.clicked[bool].connect(self.PlusNum)
+        MinusBtn.clicked[bool].connect(self.MinusNum)
         #self.setGeometry(300, 300, 280, 170)
         #self.setWindowTitle('切换按钮') 
         #self.show()
         
     def changeModel(self, pressed):
-        self.Modelname
+        if self.curModelIndex < self.Modelnum-1:
+            self.curModelIndex += 1
+        else:
+            self.curModelIndex = 0
+        self.ModelFile = self.ModelFileList[self.curModelIndex]
+        self.ModelName = self.ModelNameList[self.curModelIndex]
+        self.textBrowser.setText('using model file: '+self.ModelFile)
+
+    def PlusNum(self, pressed):
+        self.displayNum += 1
+        self.textBrowser.setText('show first '+str(self.displayNum)+' results.')
+
+    def MinusNum(self, pressed):
+        if self.displayNum > 1:
+            self.displayNum -= 1
+        else:
+            self.displayNum = 1
+        self.textBrowser.setText('show first '+str(self.displayNum)+' results.')
     
-
-
-
-
-
-
 app = QApplication(sys.argv)
 window = Window()
 window.show()
